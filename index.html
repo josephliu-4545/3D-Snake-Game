@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3D Snake Game</title>
+    <link rel="stylesheet" href="./style.css">
+</head>
+<body>
+    <!-- Game UI overlay -->
+    <div id="ui">
+        <div id="score">Score: 0</div>
+        <div id="game-over" class="hidden">
+            <h1>Game Over!</h1>
+            <p>Press R to Restart</p>
+        </div>
+        <div id="instructions">
+            Use Arrow Keys or WASD to move
+        </div>
+    </div>
+
+    <!-- 3D Canvas container -->
+    <div id="game-container"></div>
+
+    <!-- Main JavaScript entry point -->
+    <script type="module" src="./src/main.js"></script>
+</body>
+</html>
