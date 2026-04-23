@@ -61,9 +61,30 @@ html, body {
     top: 20px;
     left: 20px;
     color: white;
-    font-size: 24px;
+    font-size: 28px;
     font-weight: bold;
-    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
+    background: rgba(0, 0, 0, 0.4);
+    padding: 10px 20px;
+    border-radius: 8px;
+    backdrop-filter: blur(4px);
+}
+
+/* ==========================================
+   HIGH SCORE DISPLAY
+   ========================================== */
+#high-score {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    color: #fbbf24;
+    font-size: 20px;
+    font-weight: bold;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
+    background: rgba(0, 0, 0, 0.4);
+    padding: 8px 16px;
+    border-radius: 8px;
+    backdrop-filter: blur(4px);
 }
 
 /* ==========================================
@@ -89,20 +110,51 @@ html, body {
     transform: translate(-50%, -50%);
     text-align: center;
     color: white;
-    background: rgba(0, 0, 0, 0.8);
-    padding: 40px 60px;
-    border-radius: 10px;
+    background: rgba(0, 0, 0, 0.85);
+    padding: 50px 70px;
+    border-radius: 16px;
+    border: 2px solid #ef4444;
+    box-shadow: 0 0 30px rgba(239, 68, 68, 0.3);
+    backdrop-filter: blur(8px);
 }
 
 #game-over h1 {
-    font-size: 48px;
+    font-size: 52px;
     margin-bottom: 20px;
     color: #ef4444;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+}
+
+#final-score {
+    font-size: 32px;
+    color: #22c55e;
+    margin-bottom: 10px;
+    font-weight: bold;
+}
+
+#high-score-display {
+    font-size: 24px;
+    color: #fbbf24;
+    margin-bottom: 30px;
 }
 
 #game-over p {
-    font-size: 20px;
-    color: #ccc;
+    font-size: 18px;
+    color: #9ca3af;
+    margin-top: 10px;
+}
+
+/* Blinking animation for restart prompt */
+@keyframes blink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+}
+
+#game-over .restart-prompt {
+    animation: blink 1.5s infinite;
+    color: white;
+    font-weight: bold;
 }
 
 /* Hidden class - hides elements */

@@ -77,9 +77,9 @@ export const CONTROLS = {
 // --- GAME RULES ---
 // What ends the game?
 export const GAME_RULES = {
-    WALL_COLLISION: true,    // Hit wall = game over
+    WALL_COLLISION: false,   // No walls - snake moves on cube surface
     SELF_COLLISION: true,    // Hit yourself = game over
-    WRAP_AROUND: false       // If true, snake wraps to other side (not used)
+    WRAP_AROUND: true       // Snake wraps around cube faces
 };
 
 // --- UI TEXT ---
