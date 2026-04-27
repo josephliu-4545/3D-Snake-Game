@@ -36,19 +36,19 @@ export const MOVE_INTERVAL = 200;
 // --- COLORS ---
 // Using hex colors (same format as CSS: #RRGGBB)
 export const COLORS = {
-    // Snake colors
-    SNAKE_HEAD: 0x22c55e,    // Bright green (the head)
-    SNAKE_BODY: 0x16a34a,    // Darker green (body segments)
+    // Snake colors - BRIGHTER for visibility
+    SNAKE_HEAD: 0x00ff44,    // Bright neon green (the head) - highly visible
+    SNAKE_BODY: 0x00cc33,    // Bright green (body segments)
     
     // Food color
-    FOOD: 0xef4444,          // Red (contrasts with green snake)
+    FOOD: 0xff3333,          // Bright red (contrasts with green snake)
     
     // Board colors
-    BOARD: 0x1f2937,         // Dark gray (the ground)
-    BOARD_GRID: 0x374151,    // Slightly lighter gray (grid lines)
+    BOARD: 0x2a2a3e,         // Slightly lighter dark gray for contrast
+    BOARD_GRID: 0x444455,    // More visible grid lines
     
     // Background
-    BACKGROUND: 0x111827,     // Very dark gray/almost black
+    BACKGROUND: 0x1a1a2e,     // Slightly lighter background
 };
 
 // --- CAMERA SETTINGS ---

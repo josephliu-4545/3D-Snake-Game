@@ -63,8 +63,8 @@ export class Game {
         // Check if head is outside grid bounds
         const hitWall = headPos.x < 0 || 
                        headPos.x >= GRID_SIZE || 
-                       headPos.z < 0 || 
-                       headPos.z >= GRID_SIZE;
+                       headPos.y < 0 || 
+                       headPos.y >= GRID_SIZE;
         
         if (hitWall) {
             console.log('Wall collision! Head at:', headPos);

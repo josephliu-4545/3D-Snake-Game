@@ -25,16 +25,16 @@ export class Food {
      * Create the 3D food mesh
      */
     createMesh() {
-        // Food is a smaller cube than the snake
-        const geometry = new THREE.BoxGeometry(CELL_SIZE * 0.6, CELL_SIZE * 0.6, CELL_SIZE * 0.6);
+        // Geometry: larger for visibility (80% of cell size)
+        const geometry = new THREE.BoxGeometry(CELL_SIZE * 0.8, CELL_SIZE * 0.8, CELL_SIZE * 0.8);
         
-        // Bright red color to contrast with green snake
+        // Material: bright glowing red
         const material = new THREE.MeshStandardMaterial({
             color: COLORS.FOOD,
-            roughness: 0.2,
-            metalness: 0.3,
             emissive: COLORS.FOOD,
-            emissiveIntensity: 0.2  // Slight glow effect
+            emissiveIntensity: 0.8,
+            roughness: 0.2,
+            metalness: 0.3
         });
         
         this.mesh = new THREE.Mesh(geometry, material);
@@ -42,7 +42,7 @@ export class Food {
     }
     
     /**
-     * Get the food's mesh group
+     * Get the mesh group (for scene management)
      */
     getMesh() {
         return this.meshGroup;
@@ -56,7 +56,7 @@ export class Food {
     }
     
     /**
-     * Spawn food at a random position
+     * Spawn food at a random position on any face
      * Avoids spawning on the snake's body
      * 
      * @param {Array} snakeBody - Array of {x, y, face} positions to avoid
@@ -66,12 +66,19 @@ export class Food {
         let attempts = 0;
         const maxAttempts = 100;
         
+        // Array of all face values
+        const faces = [
+            CUBE_FACES.FRONT, CUBE_FACES.BACK,
+            CUBE_FACES.LEFT, CUBE_FACES.RIGHT,
+            CUBE_FACES.TOP, CUBE_FACES.BOTTOM
+        ];
+        
         while (!validPosition && attempts < maxAttempts) {
-            // Generate random grid position on front face (for now)
+            // Generate random grid position on any face
             const newPos = {
                 x: Math.floor(Math.random() * GRID_SIZE),
                 y: Math.floor(Math.random() * GRID_SIZE),
-                face: CUBE_FACES.FRONT
+                face: faces[Math.floor(Math.random() * faces.length)]
             };
             
             // Check if position is on snake body
@@ -83,9 +90,12 @@ export class Food {
                 this.position = newPos;
                 validPosition = true;
                 
-                // Update mesh position with face
+                // Update mesh position with face (gridToWorld now handles protrusion)
                 const worldPos = gridToWorld(newPos.x, newPos.y, newPos.face);
                 this.mesh.position.set(worldPos.x, worldPos.y, worldPos.z);
+                
+                // Align food to face orientation
+                this.alignToFace(newPos.face);
             }
             
             attempts++;
@@ -96,6 +106,35 @@ export class Food {
         }
         
         console.log('Food spawned at:', this.position);
+    }
+    
+    /**
+     * Align food to face orientation (Rotation only)
+     * 
+     * @param {number} face - Face value to align to
+     */
+    alignToFace(face) {
+        this.mesh.rotation.set(0, 0, 0);
+        
+        switch (face) {
+            case CUBE_FACES.FRONT:
+                break;
+            case CUBE_FACES.BACK:
+                this.mesh.rotation.y = Math.PI;
+                break;
+            case CUBE_FACES.LEFT:
+                this.mesh.rotation.y = -Math.PI / 2;
+                break;
+            case CUBE_FACES.RIGHT:
+                this.mesh.rotation.y = Math.PI / 2;
+                break;
+            case CUBE_FACES.TOP:
+                this.mesh.rotation.x = -Math.PI / 2;
+                break;
+            case CUBE_FACES.BOTTOM:
+                this.mesh.rotation.x = Math.PI / 2;
+                break;
+        }
     }
     
     /**

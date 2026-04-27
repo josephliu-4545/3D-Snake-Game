@@ -11,7 +11,7 @@ import * as THREE from 'three';
 import { COLORS, CAMERA_POSITION, CAMERA_TARGET, MOVE_INTERVAL, GRID_SIZE, CELL_SIZE } from './constants.js';
 
 // Import grid module (new for Phase 2)
-import { createGrid, gridToWorld, getCameraForFace } from './grid.js';
+import { createGrid, gridToWorld, getCameraForFace, CUBE_FACES } from './grid.js';
 
 // Import snake module (new for Phase 3)
 import { createSnake } from './snake.js';
@@ -43,32 +43,43 @@ const camera = new THREE.PerspectiveCamera(
     1000                                    // Far clipping plane
 );
 
-// Position the camera using our constants
-camera.position.set(CAMERA_POSITION.x, CAMERA_POSITION.y, CAMERA_POSITION.z);
-camera.lookAt(CAMERA_TARGET.x, CAMERA_TARGET.y, CAMERA_TARGET.z);
+// Position camera directly in front of the cube for flat face view
+// Camera stays static, cube rotates to show the active face
+camera.position.set(0, 0, GRID_SIZE * CELL_SIZE * 2.2);  // Dynamic distance based on grid size
+camera.lookAt(0, 0, 0);         // Looking at center of cube
 
 // ==========================================
-// CAMERA FOLLOWING SNAKE
-// Camera rotates around the cube to follow snake
+// CUBE ROTATION (Camera stays static, cube rotates)
+// The cube rotates so the snake's current face is always facing camera
 // ==========================================
 
-function updateCamera() {
-    const headPos = snake.getHeadPosition();
-    const currentFace = snake.getCurrentFace();
-    
-    // Get camera position for current face
-    const cameraSettings = getCameraForFace(currentFace);
-    
-    // Smoothly interpolate camera position (faster for better responsiveness)
-    camera.position.x += (cameraSettings.position.x - camera.position.x) * 0.1;
-    camera.position.y += (cameraSettings.position.y - camera.position.y) * 0.1;
-    camera.position.z += (cameraSettings.position.z - camera.position.z) * 0.1;
-    
-    // Get snake head world position
-    const worldPos = gridToWorld(headPos.x, headPos.y, headPos.face);
-    
-    // Look at snake head instead of center
-    camera.lookAt(worldPos.x, worldPos.y, worldPos.z);
+const FACE_NORMALS = {
+    [CUBE_FACES.FRONT]:  new THREE.Vector3( 0,  0,  1),
+    [CUBE_FACES.BACK]:   new THREE.Vector3( 0,  0, -1),
+    [CUBE_FACES.LEFT]:   new THREE.Vector3(-1,  0,  0),
+    [CUBE_FACES.RIGHT]:  new THREE.Vector3( 1,  0,  0),
+    [CUBE_FACES.TOP]:    new THREE.Vector3( 0,  1,  0),
+    [CUBE_FACES.BOTTOM]: new THREE.Vector3( 0, -1,  0),
+};
+
+function getFaceQuaternion(face) {
+    const normal = FACE_NORMALS[face];
+    const cameraDir = new THREE.Vector3(0, 0, 1);
+    const q = new THREE.Quaternion();
+    q.setFromUnitVectors(normal, cameraDir);
+    return q;
+}
+
+let targetQuaternion = getFaceQuaternion(CUBE_FACES.FRONT);
+
+function updateRotationTarget() {
+    targetQuaternion = getFaceQuaternion(snake.getCurrentFace());
+    console.log('Rotating to face:', snake.getCurrentFace(), '| target quaternion:', targetQuaternion);
+}
+
+function updateCubeRotation() {
+    // Smoothly interpolate cube orientation using slerp (shortest path)
+    grid.quaternion.slerp(targetQuaternion, 0.1);
 }
 
 // ==========================================
@@ -92,8 +103,8 @@ const ambientLight = new THREE.AmbientLight(0xffffff, 0.8);
 scene.add(ambientLight);
 
 // Main directional light
-const directionalLight = new THREE.DirectionalLight(0xffffff, 1.0);
-directionalLight.position.set(15, 25, 15);
+const directionalLight = new THREE.DirectionalLight(0xffffff, 1.2);
+directionalLight.position.set(5, 10, 15);
 scene.add(directionalLight);
 
 // Additional point light to illuminate the cube from center
@@ -112,6 +123,8 @@ scene.add(rimLight);
 // ==========================================
 
 const grid = createGrid();
+// Initialize orientation with FRONT face
+grid.quaternion.copy(getFaceQuaternion(CUBE_FACES.FRONT));
 scene.add(grid);
 
 // ==========================================
@@ -120,7 +133,7 @@ scene.add(grid);
 // ==========================================
 
 let snake = createSnake();
-scene.add(snake.getMesh());
+grid.add(snake.getMesh()); // Parent to grid for automatic rotation sync
 
 // ==========================================
 // STEP 7: Create Food
@@ -128,9 +141,7 @@ scene.add(snake.getMesh());
 // ==========================================
 
 let food = createFood();
-scene.add(food.getMesh());
-
-// Spawn first food (avoid snake's starting position)
+grid.add(food.getMesh()); // Parent to grid for automatic rotation sync
 food.spawn(snake.getBodyPositions());
 
 // ==========================================
@@ -138,10 +149,13 @@ food.spawn(snake.getBodyPositions());
 // Listen for keyboard to control the snake
 // ==========================================
 
-const input = createInputHandler((direction) => {
-    snake.setDirection(direction);
-    console.log('Direction changed to:', direction);
-});
+const input = createInputHandler(
+    (direction) => {
+        snake.setDirection(direction);
+        console.log('Direction changed to:', direction);
+    },
+    () => snake.getCurrentFace()  // Callback to get current face for screen-relative controls
+);
 
 // ==========================================
 // SCORE TRACKING & HIGH SCORE
@@ -246,6 +260,9 @@ function startGame() {
         
         const newHead = snake.move();
         
+        // Update rotation target immediately after move
+        updateRotationTarget();
+        
         // Check for self collision only (walls are disabled in cube mode)
         if (game.checkCollisions(snake)) {
             return; // Game over happened
@@ -284,17 +301,17 @@ function restartGame() {
     // Reset high score display color
     gameOverHighScoreElement.style.color = '#fbbf24';
     
-    // Remove old snake and food from scene
-    scene.remove(snake.getMesh());
-    scene.remove(food.getMesh());
+    // Remove old snake and food from grid (not scene directly)
+    grid.remove(snake.getMesh());
+    grid.remove(food.getMesh());
     
     // Create new snake and food
     snake = createSnake();
     food = createFood();
     
-    // Add to scene
-    scene.add(snake.getMesh());
-    scene.add(food.getMesh());
+    // Add to grid
+    grid.add(snake.getMesh());
+    grid.add(food.getMesh());
     food.spawn(snake.getBodyPositions());
     
     // Update window reference
@@ -331,9 +348,9 @@ function animate() {
     // Request next frame (runs 60 times per second)
     requestAnimationFrame(animate);
     
-    // Update camera to follow snake (only when game is active)
+    // Update cube rotation to show current face (camera stays static)
     if (game && game.isActive()) {
-        updateCamera();
+        updateCubeRotation();
     }
     
     // Render the scene from the camera's perspective
